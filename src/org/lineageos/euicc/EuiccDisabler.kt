@@ -9,13 +9,8 @@ import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.ApplicationInfoFlags
-import android.util.Log
 
 object EuiccDisabler {
-    private const val TAG = "EuiccDisabler"
-
-    private val EUICC_DEPENDENCIES = listOf("com.google.android.gms")
-
     private val EUICC_PACKAGES = listOf("com.google.android.euicc")
 
     private fun isInstalled(pm: PackageManager, pkgName: String) =
@@ -25,20 +20,11 @@ object EuiccDisabler {
             }
             .getOrDefault(false)
 
-    private fun isInstalledAndEnabled(pm: PackageManager, pkgName: String) =
-        runCatching {
-                val info = pm.getApplicationInfo(pkgName, ApplicationInfoFlags.of(0))
-                Log.d(TAG, "package $pkgName installed, enabled = ${info.enabled}")
-                info.enabled
-            }
-            .getOrDefault(false)
-
     fun enableOrDisableEuicc(context: Context) {
         val pm = context.packageManager
         val supportsEuicc = pm.hasSystemFeature(PackageManager.FEATURE_TELEPHONY_EUICC)
-        val disable = !supportsEuicc || EUICC_DEPENDENCIES.any { !isInstalledAndEnabled(pm, it) }
         val flag =
-            if (disable) {
+            if (!supportsEuicc) {
                 PackageManager.COMPONENT_ENABLED_STATE_DISABLED
             } else {
                 PackageManager.COMPONENT_ENABLED_STATE_ENABLED
